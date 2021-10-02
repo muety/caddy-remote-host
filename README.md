@@ -1,3 +1,5 @@
+[![Go](https://github.com/muety/caddy-remote-host/workflows/Go/badge.svg)](https://github.com/muety/caddy-remote-host/actions)
+
 # caddy-remote-host
 
 Caddy plugin to match a request's client IP against A and AAAA DNS records of a host name (analogously
