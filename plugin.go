@@ -70,7 +70,7 @@ func (m *MatchRemoteHost) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 // Provision implements caddy.Provisioner.
 func (m *MatchRemoteHost) Provision(ctx caddy.Context) (err error) {
 	m.logger = ctx.Logger(m)
-	hostRegex, err = regexp.Compile("^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?(?:\\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?)*\\.?$")
+	hostRegex, err = regexp.Compile(`^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))$`)
 	return err
 }
 
