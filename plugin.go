@@ -7,14 +7,17 @@ import (
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
+	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 	"net"
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 )
 
 var hostRegex *regexp.Regexp
+var cacheKey string = "hosts"
 
 func init() {
 	caddy.RegisterModule(MatchRemoteHost{})
@@ -36,7 +39,13 @@ type MatchRemoteHost struct {
 	// to spoof request headers. Default: false
 	Forwarded bool `json:"forwarded,omitempty"`
 
+	// By default, DNS responses are cached for 60 seconds, regardless
+	// of the DNS record's TTL. Set nocache to true to disable this
+	// behavior and never use caching. Default: false
+	NoCache bool `json:"nocache,omitempty"`
+
 	logger *zap.Logger
+	cache  *cache.Cache
 }
 
 // CaddyModule returns the Caddy module information.
@@ -53,9 +62,16 @@ func (m *MatchRemoteHost) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 		for d.NextArg() {
 			if d.Val() == "forwarded" {
 				if len(m.Hosts) > 0 {
-					return d.Err("if used, 'forwarded' must be first argument")
+					return d.Err("if used, 'forwarded' must appear before 'hosts' argument")
 				}
 				m.Forwarded = true
+				continue
+			}
+			if d.Val() == "nocache" {
+				if len(m.Hosts) > 0 {
+					return d.Err("if used, 'nocache' must appear before 'hosts' argument")
+				}
+				m.NoCache = true
 				continue
 			}
 			m.Hosts = append(m.Hosts, d.Val())
@@ -70,6 +86,7 @@ func (m *MatchRemoteHost) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 // Provision implements caddy.Provisioner.
 func (m *MatchRemoteHost) Provision(ctx caddy.Context) (err error) {
 	m.logger = ctx.Logger(m)
+	m.cache = cache.New(1*time.Minute, 2*time.Minute)
 	hostRegex, err = regexp.Compile(`^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))$`)
 	return err
 }
@@ -126,6 +143,12 @@ func (m *MatchRemoteHost) getClientIP(r *http.Request) (net.IP, error) {
 }
 
 func (m *MatchRemoteHost) resolveIPs() ([]net.IP, error) {
+	if result, ok := m.cache.Get(cacheKey); ok && !m.NoCache {
+		return result.([]net.IP), nil
+	}
+
+	m.logger.Info("resolving")
+
 	allIPs := make([]net.IP, 0)
 
 	for _, h := range m.Hosts {
@@ -135,6 +158,8 @@ func (m *MatchRemoteHost) resolveIPs() ([]net.IP, error) {
 		}
 		allIPs = append(allIPs, ips...)
 	}
+
+	m.cache.SetDefault(cacheKey, allIPs)
 
 	return allIPs, nil
 }
