@@ -147,8 +147,6 @@ func (m *MatchRemoteHost) resolveIPs() ([]net.IP, error) {
 		return result.([]net.IP), nil
 	}
 
-	m.logger.Info("resolving")
-
 	allIPs := make([]net.IP, 0)
 
 	for _, h := range m.Hosts {
