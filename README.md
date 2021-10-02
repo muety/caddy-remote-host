@@ -10,11 +10,13 @@ uses [LookupIP](https://pkg.go.dev/net?utm_source=godoc#LookupIP) internally).
 ## Usage
 
 ```
-remote_host [forwarded] <hosts...>
+remote_host [forwarded] [nocache] <hosts...>
 ```
 
-Accepts valid host names. If the first argument is `forwarded`, then the first IP in the `X-Forwarded-For` request
+Accepts valid host names. If `forwarded` is given as an argument, then the first IP in the `X-Forwarded-For` request
 header, if present, will be preferred as the reference IP, rather than the immediate peer's IP, which is the default.
+If `nocache` is given as an argument, this module will not cache DNS responses and instead resolve the given hosts' for
+every request. By default, responses are cached for 60 seconds, regardless of the DNS record's time-to-live (TTL).
 
 Multiple `remote_host` matchers will be OR'ed together.
 
