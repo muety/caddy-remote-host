@@ -1,11 +1,11 @@
 [![Go](https://github.com/muety/caddy-remote-host/workflows/Go/badge.svg)](https://github.com/muety/caddy-remote-host/actions)
+![Coding Time](https://img.shields.io/endpoint?url=https://wakapi.dev/api/compat/shields/v1/n1try/interval:any/project:caddy-remote-host&color=blue&label=coding%20time)
 
 # caddy-remote-host
 
 Caddy plugin to match a request's client IP against A and AAAA DNS records of a host name (analogously
 to [`remote_ip`](https://caddyserver.com/docs/caddyfile/matchers#remote-ip)). Can be useful to restrict route access to
-a client, that uses dynamic DNS. Uses the host machine's local DNS resolver (
-uses [LookupIP](https://pkg.go.dev/net?utm_source=godoc#LookupIP) internally).
+a client, that uses dynamic DNS. Uses the host machine's local DNS resolver (uses [LookupIP](https://pkg.go.dev/net?utm_source=godoc#LookupIP) internally).
 
 ## Usage
 
